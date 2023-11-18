@@ -5,7 +5,7 @@ from django.db import models
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import CarDealer, DealerReview, CarMake, CarModel
 from .restapis import get_dealers_from_cf,get_request, get_dealer_reviews_from_cf, post_request
-from .restapis import get_dealers_from_local, get_dealer_reviews_from_local
+from .restapis import get_dealers_from_local, get_dealer_reviews_from_local, add_dealer_review_from_local
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -166,7 +166,7 @@ def add_review(request, dealer_id):
                 "dealership": dealer_id,
                 "review": review,
                 "purchase": purchase,
-                "another": "field",
+                #"another": "field",
                 "purchase_date": purchase_date_str,
                 "car_make": car_make,
                 "car_model": car_model,
@@ -180,7 +180,7 @@ def add_review(request, dealer_id):
         url = "https://bradleystoor-5000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/post_review"
 
         # Assume you have a method to post the review, replace 'post_review' with your actual method
-        response = post_request(url, review_JSON)
+        response = post_request(url, review_JSON) if not TEST else add_dealer_review_from_local(json_payload)
 
         return HttpResponseRedirect(reverse('djangoapp:dealer_details', args=(dealer_id,)))
 

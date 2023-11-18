@@ -117,6 +117,12 @@ def get_dealer_reviews_from_local(dealer_id):
                                 ))
     return results
 
+def add_dealer_review_from_local(review):
+    review['id'] = max([row['id'] for row in reviews_db]) +1
+    print("\n\nAdding a review", reviews_db[0], review)
+    reviews_db.append(review)
+    
+
 # Create an `analyze_review_sentiments` method to call Watson NLU and analyze text
 def analyze_review_sentiments(dealerreview):
     url = "https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/49539b41-6d73-4689-91a4-8d2eba168cf7"
