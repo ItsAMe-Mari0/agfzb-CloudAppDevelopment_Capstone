@@ -5,6 +5,7 @@ from django.db import models
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import CarDealer, DealerReview, CarMake, CarModel
 from .restapis import get_dealers_from_cf,get_request, get_dealer_reviews_from_cf, post_request
+from .restapis import get_dealers_from_local, get_dealer_reviews_from_local
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -17,6 +18,7 @@ import json
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+TEST = True
 
 # Create your views here.
 
@@ -100,23 +102,27 @@ def registration_request(request):
 def get_dealerships(request):
     context = {}
     if request.method == "GET":
-        url = "https://rafaelmagnav-3000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
+
+        print(request)
+        url = "https://bradleystoor-3000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
         # Get dealers from the URL
-        dealerships = get_dealers_from_cf(url)
+        dealerships = get_dealers_from_cf(url) if not TEST else get_dealers_from_local()
         # Return a list of dealer short name
         context['dealerships'] = dealerships
         return render(request, 'djangoapp/index.html', context)
         # return HttpResponse(dealer_names)
 
 
+
 def get_dealer_details(request, dealer_id):
     context = {}
     if request.method == "GET":
-        url = f"https://rafaelmagnav-5000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/get_reviews"
-        dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
+        url = f"https://bradleystoor-5000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/get_reviews"
+        dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id) if not TEST else get_dealer_reviews_from_local(dealer_id)
+        print("Dealer_reviews", dealer_reviews)
         context['dealer_reviews'] = dealer_reviews
-        url2 = "https://rafaelmagnav-3000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
-        dealerships = get_dealers_from_cf(url2)
+        url2 = "https://bradleystoor-3000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
+        dealerships = get_dealers_from_cf(url2) if not TEST else get_dealers_from_local()
         dealership_name = next((dealer.full_name for dealer in dealerships if dealer.id == dealer_id), None)
         context['dealer_id'] = dealer_id
         context['dealership_name'] = dealership_name
@@ -127,8 +133,8 @@ def add_review(request, dealer_id):
     cars = CarModel.objects.filter(dealer_id=dealer_id)
     context['cars'] = cars
     context['dealer_id'] = dealer_id
-    url2 = "https://rafaelmagnav-3000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
-    dealerships = get_dealers_from_cf(url2)
+    url2 = "https://bradleystoor-3000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
+    dealerships = get_dealers_from_cf(url2) if not TEST else get_dealers_from_local()
     dealership_name = next((dealer.full_name for dealer in dealerships if dealer.id == dealer_id), None)
     context['dealer_id'] = dealer_id
     context['dealership_name'] = dealership_name
@@ -171,7 +177,7 @@ def add_review(request, dealer_id):
         new_payload1["review"] = review_JSON
         print("\nREVIEW:",review_JSON)
 
-        url = "https://rafaelmagnav-5000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/post_review"
+        url = "https://bradleystoor-5000.theiadocker-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/post_review"
 
         # Assume you have a method to post the review, replace 'post_review' with your actual method
         response = post_request(url, review_JSON)

@@ -6,6 +6,13 @@ from ibm_watson import NaturalLanguageUnderstandingV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson.natural_language_understanding_v1 import Features, SentimentOptions
 
+with open("/home/project/agfzb-CloudAppDevelopment_Capstone/cloudant/data/dealerships.json", "r") as f:
+    dealership_db = json.load(f)['dealerships']
+with open("/home/project/agfzb-CloudAppDevelopment_Capstone/cloudant/data/reviews-full.json", "r") as f:
+    reviews_db = json.load(f)['reviews']
+#print("Dealership_db", dealership_db)
+#print('\n\n')
+#print("Reviews_db", reviews_db)
 
 # Create a `get_request` to make HTTP GET requests
 def get_request(url, api_key=None, **kwargs):
@@ -68,6 +75,16 @@ def get_dealers_from_cf(url, **kwargs):
 
     return results
 
+def get_dealers_from_local():
+    results = []
+    for dealer in dealership_db:
+        #print("get_dealer_from_local", dealer)
+        results.append(CarDealer(address=dealer["address"], city=dealer["city"], full_name=dealer["full_name"],
+                                   id=dealer["id"], lat=dealer["lat"], long=dealer["long"],
+                                   short_name=dealer["short_name"],
+                                   st=dealer["st"], zip=dealer["zip"], _id=None, _rev=None,
+                                   state=dealer["state"]))
+    return results
 
 # Create a get_dealer_reviews_from_cf method to get reviews by dealer id from a cloud function
 def get_dealer_reviews_from_cf(url, dealer_id, **kwargs):
@@ -87,6 +104,18 @@ def get_dealer_reviews_from_cf(url, dealer_id, **kwargs):
 
     return results
 
+def get_dealer_reviews_from_local(dealer_id):
+    results = []
+    for review in reviews_db:
+        if review["dealership"] != dealer_id:
+            continue
+        print("get_dealer_reviews_from_local", dealer_id,review)
+        sentiment = analyze_review_sentiments(review["review"])
+        results.append(DealerReview(dealership=review["dealership"], name=review["name"], purchase=review["purchase"],
+                                   review=review["review"], purchase_date=review["purchase_date"], car_make=review["car_make"],
+                                   car_model=review["car_model"], car_year=review["car_year"], sentiment=sentiment, id=review["id"]
+                                ))
+    return results
 
 # Create an `analyze_review_sentiments` method to call Watson NLU and analyze text
 def analyze_review_sentiments(dealerreview):
